@@ -2,9 +2,10 @@ import {
   Controller,
   Post,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
 type File = Express.Multer.File;
 
@@ -19,11 +20,18 @@ export class FilesUploadController {
     }),
   )
   uploadFile(@UploadedFile() file: File) {
-    return file;
+    console.log(file);
   }
 
   @Post('/multiple')
-  uploadFiles() {
-    return 'Upload multiple files';
+  @UseInterceptors(
+    FilesInterceptor('files', 2, {
+      limits: {
+        fileSize: 1024 * 1024 * 2, // 2MB
+      },
+    }),
+  )
+  uploadFiles(@UploadedFiles() files: File[]) {
+    console.log(files);
   }
 }
