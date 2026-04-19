@@ -1,6 +1,11 @@
 import {
   Controller,
+  FileTypeValidator,
+  HttpStatus,
+  MaxFileSizeValidator,
+  ParseFilePipe,
   Post,
+  UnprocessableEntityException,
   UploadedFile,
   UploadedFiles,
   UseInterceptors,
@@ -12,25 +17,34 @@ type File = Express.Multer.File;
 @Controller('files-upload')
 export class FilesUploadController {
   @Post('/single')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      limits: {
-        fileSize: 1024 * 1024 * 2, // 2MB
-      },
-    }),
-  )
-  uploadFile(@UploadedFile() file: File) {
+  @UseInterceptors(FileInterceptor('file'))
+  uploadFile(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 200 * 1024 * 1024, // 2MB
+            message: (maxSize) =>
+              `File too large. Max size is ${maxSize} bytes`,
+          }),
+          new FileTypeValidator({
+            fileType: 'image/*',
+          }),
+        ],
+        errorHttpStatusCode: HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+        exceptionFactory: (error) => {
+          console.log(error);
+          throw new UnprocessableEntityException(error);
+        },
+      }),
+    )
+    file: File,
+  ) {
     console.log(file);
   }
 
   @Post('/multiple')
-  @UseInterceptors(
-    FilesInterceptor('files', 2, {
-      limits: {
-        fileSize: 1024 * 1024 * 2, // 2MB
-      },
-    }),
-  )
+  @UseInterceptors(FilesInterceptor('files'))
   uploadFiles(@UploadedFiles() files: File[]) {
     console.log(files);
   }
