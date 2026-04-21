@@ -45,7 +45,28 @@ export class FilesUploadController {
 
   @Post('/multiple')
   @UseInterceptors(FilesInterceptor('files'))
-  uploadFiles(@UploadedFiles() files: File[]) {
+  uploadFiles(
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 2 * 1024 * 1024, // 2MB
+            message: (maxSize) =>
+              `File too large. Max size is ${maxSize} bytes`,
+          }),
+          new FileTypeValidator({
+            fileType: 'image/*',
+          }),
+        ],
+        errorHttpStatusCode: HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+        exceptionFactory: (error) => {
+          console.log(error);
+          throw new UnprocessableEntityException(error);
+        },
+      }),
+    )
+    files: File[],
+  ) {
     console.log(files);
   }
 }
