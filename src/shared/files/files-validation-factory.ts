@@ -7,30 +7,35 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { FileSignatureValidator } from './validators/file-signature.validator';
+import { FileType } from './types/file.types';
+import { createFileTypeRegex } from './utils/file.util';
 
 const createFileValidators = (
   maxSize: number,
-  fileType: RegExp | string,
-): FileValidator[] => [
-  // 1) Validate file size
-  new MaxFileSizeValidator({
-    maxSize,
-    message: (maxSize) => `File too large. Max size is ${maxSize} bytes`,
-  }),
-  // 2) Validate file type (PNG or JPG)
-  new FileTypeValidator({
-    fileType,
-  }),
-  // 3) custom validator (validate file signature)
-  new FileSignatureValidator(),
-];
+  fileTypes: FileType[],
+): FileValidator[] => {
+  const fileTypeRegex = createFileTypeRegex(fileTypes);
+  return [
+    // 1) Validate file size
+    new MaxFileSizeValidator({
+      maxSize,
+      message: (maxSize) => `File too large. Max size is ${maxSize} bytes`,
+    }),
+    // 2) Validate file type (PNG or JPG)
+    new FileTypeValidator({
+      fileType: fileTypeRegex,
+    }),
+    // 3) custom validator (validate file signature)
+    new FileSignatureValidator(),
+  ];
+};
 
 export const createParseFilePipe = (
   maxSize: number,
-  fileType: RegExp | string,
+  fileTypes: FileType[],
 ): ParseFilePipe => {
   return new ParseFilePipe({
-    validators: createFileValidators(maxSize, fileType),
+    validators: createFileValidators(maxSize, fileTypes),
     errorHttpStatusCode: HttpStatus.UNSUPPORTED_MEDIA_TYPE,
     exceptionFactory: (error) => {
       console.log(error);
