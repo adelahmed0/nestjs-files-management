@@ -1,17 +1,12 @@
 import {
   Controller,
-  FileTypeValidator,
-  HttpStatus,
-  MaxFileSizeValidator,
-  ParseFilePipe,
   Post,
-  UnprocessableEntityException,
   UploadedFile,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { FileSignatureValidator } from 'src/shared/files/validators/file-signature.validator';
+import { createParseFilePipe } from 'src/shared/files/files-validation-factory';
 
 type File = Express.Multer.File;
 
@@ -20,29 +15,7 @@ export class FilesUploadController {
   @Post('/single')
   @UseInterceptors(FileInterceptor('file'))
   uploadFile(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          // 1) Validate file size (2MB max)
-          new MaxFileSizeValidator({
-            maxSize: 2 * 1024 * 1024, // 2MB
-            message: (maxSize) =>
-              `File too large. Max size is ${maxSize} bytes`,
-          }),
-          // 2) Validate file type (PNG or JPG)
-          new FileTypeValidator({
-            fileType: '/png|jpg/',
-          }),
-          // 3) custom validator (validate file signature)
-          new FileSignatureValidator(),
-        ],
-        errorHttpStatusCode: HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-        exceptionFactory: (error) => {
-          console.log(error);
-          throw new UnprocessableEntityException(error);
-        },
-      }),
-    )
+    @UploadedFile(createParseFilePipe(2 * 1024 * 1024, '/png|jpg/'))
     file: File,
   ) {
     console.log(file);
@@ -51,29 +24,7 @@ export class FilesUploadController {
   @Post('/multiple')
   @UseInterceptors(FilesInterceptor('files'))
   uploadFiles(
-    @UploadedFiles(
-      new ParseFilePipe({
-        validators: [
-          // 1) Validate file size (2MB max)
-          new MaxFileSizeValidator({
-            maxSize: 2 * 1024 * 1024, // 2MB
-            message: (maxSize) =>
-              `File too large. Max size is ${maxSize} bytes`,
-          }),
-          // 2) Validate file type (PNG or JPG)
-          new FileTypeValidator({
-            fileType: '/png|jpg/',
-          }),
-          // 3) custom validator (validate file signature)
-          new FileSignatureValidator(),
-        ],
-        errorHttpStatusCode: HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-        exceptionFactory: (error) => {
-          console.log(error);
-          throw new UnprocessableEntityException(error);
-        },
-      }),
-    )
+    @UploadedFiles(createParseFilePipe(2 * 1024 * 1024, '/png|jpg/'))
     files: File[],
   ) {
     console.log(files);
