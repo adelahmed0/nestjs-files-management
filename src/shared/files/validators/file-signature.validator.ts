@@ -6,7 +6,7 @@ export class FileSignatureValidator extends FileValidator {
     super({});
   }
   buildErrorMessage(): string {
-    return 'File signature validation failed';
+    return 'validation failed (file signature does not match expected types)';
   }
   isValid(file?: any): boolean {
     // TODO: Implement file signature validation logic here
