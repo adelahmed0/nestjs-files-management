@@ -10,16 +10,18 @@ import { FileSignatureValidator } from './validators/file-signature.validator';
 import { FileType } from './types/file.types';
 import { createFileTypeRegex } from './utils/file.util';
 import { NonEmptyArray } from '../utils/array.util';
+import bytes from 'bytes';
+import { FileSizeType } from './types/file.types';
 
 const createFileValidators = (
-  maxSize: number,
+  maxSize: FileSizeType,
   fileTypes: NonEmptyArray<FileType>,
 ): FileValidator[] => {
   const fileTypeRegex = createFileTypeRegex(fileTypes);
   return [
     // 1) Validate file size
     new MaxFileSizeValidator({
-      maxSize,
+      maxSize: Number(bytes(maxSize)),
       message: (maxSize) => `File too large. Max size is ${maxSize} bytes`,
     }),
     // 2) Validate file type (PNG or JPG)
@@ -32,7 +34,7 @@ const createFileValidators = (
 };
 
 export const createParseFilePipe = (
-  maxSize: number,
+  maxSize: FileSizeType,
   fileTypes: NonEmptyArray<FileType>,
 ): ParseFilePipe => {
   return new ParseFilePipe({
