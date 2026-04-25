@@ -22,7 +22,7 @@ export class FilesUploadController {
   }
 
   @Post('/multiple')
-  @UseInterceptors(FilesInterceptor('files'))
+  @UseInterceptors(FilesInterceptor('files', 3))
   uploadFiles(
     @UploadedFiles(createParseFilePipe('2MB', ['png', 'jpg']))
     files: File[],
